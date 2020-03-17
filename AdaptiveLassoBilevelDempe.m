@@ -1,8 +1,9 @@
-function [ul_vec, ll_vec, mew_vec, objval, tEnd] = solveLassoBilevelDempe(ul, ll, mew_mat, phi, data, iter, split)
+function [ul_vec, ll_vec, mew_vec, objval, tEnd] = AdaptiveLassoBilevelDempe(ul, ll, mew_mat, phi, data, iter, split)
     Y_train = data(1:split*size(data,1),size(data,2));
     X_train = data(1:split*size(data,1),1:size(data,2)-1);
     Y_test = data(split*size(data,1)+1:size(data,1),size(data,2));
     X_test = data(split*size(data,1)+1:size(data,1),1:size(data,2)-1);
+    
     
     p = size(X_train,2)-1;
     lambda = ul(iter,1);
@@ -59,6 +60,8 @@ function [c,ceq] = nonlinearconstraints(ul, phi, Y_train, X_train, dec_vec, p, i
     n_obs = 2*size(Y_train,1);
     ul_iter = ul(1:iter,:);
     phi_iter = phi(1:iter,:);
+    eps_weights = abs(inv(X_train'*X_train)*X_train'*Y_train);
+    
     
     lambda = dec_vec(1,:);
     ll = dec_vec(2:p+2,:);
@@ -70,7 +73,7 @@ function [c,ceq] = nonlinearconstraints(ul, phi, Y_train, X_train, dec_vec, p, i
     mew_vec = dec_vec(2*p+5+iter:2*p+4+2*iter,:);
 
     c = (1/n_obs)*(ll'*(X_train'*X_train)*ll - 2*Y_train'*X_train*ll + Y_train'*Y_train) ...
-        + lambda*(one'*eps) - mew_vec'*phi_iter;
+        + lambda*((one./eps_weights(2:end,:))'*eps) - mew_vec'*phi_iter;
 %     disp('The current c value is');
 %     disp(c);
     ceq = tau_mew.*mew_vec;

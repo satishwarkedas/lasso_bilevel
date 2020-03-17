@@ -1,4 +1,4 @@
-function [beta, fval] = solveLasso1(lambda, data, split)
+function [beta, fval] = AdaptiveLasso1(lambda, data, split)
 
 problemName = 'lasso L1 regularization';             % Test problem name
 
@@ -25,10 +25,12 @@ function functionValue = problemFunction(lambda, betaPlus, data_trainX, data_tra
     nvars = length(betaPlus);
     beta = betaPlus(1:nvars/2);
     eps = betaPlus(nvars/2+1:end);
-    %1 Lasso regression
+    one = ones(size(eps))';
+    eps_weights = abs(inv(data_trainX'*data_trainX)*data_trainX'*data_trainY);
+
     dataPoints = 2*length(data_trainY);
 %     functionValue = 1/dataPoints*sum((data_trainY-data_trainX*beta').^2)+lambda*(sum(eps));
-    functionValue = (1/dataPoints)*sum((data_trainY-data_trainX*beta').^2)+lambda*(sum(eps(:,2:end)));
+    functionValue = (1/dataPoints)*sum((data_trainY-data_trainX*beta').^2)+lambda*(eps(:,2:end)*(one(2:end,:)./eps_weights(2:end,:)));
 end
         
 function [inequalityConstrVals equalityConstrVals] = problemConstraints(lambda, betaPlus)

@@ -1,4 +1,4 @@
-function [Lambda, Beta, Time, Beta0] = lassotest(n, p, s, beta_type, rho, mew, max_iter, split)
+function [Lambda, Beta, Time, Beta0] = adaptivelassotest(n, p, s, beta_type, rho, mew, max_iter, split)
     global data
     [data, Beta0] = data_generate(n, p, s, beta_type, rho, mew);
     
@@ -10,7 +10,7 @@ function [Lambda, Beta, Time, Beta0] = lassotest(n, p, s, beta_type, rho, mew, m
     X = data(1:end,2:size(data,2)-1);
     Y = data(1:end,size(data,2));
 
-    lambda = [0:0.01:10]; % can give these as arguments
+    lambda = [0:0.001:10]; % can give these as arguments
     tStart = tic;
     [B, fitinfo] = lasso(X,Y,'CV',2,'Lambda',lambda);
 %     [B, fitinfo] = lasso(X,Y,'CV',2);
@@ -22,7 +22,7 @@ function [Lambda, Beta, Time, Beta0] = lassotest(n, p, s, beta_type, rho, mew, m
     
     % Lasso MIQP method
     start_vec = sign(corr(X,Y)).*(corr(X,Y)>median(corr(X,Y)));
-    [result_new, var_names_new, Time(:,2)] = solveLassoBilevelMIQP(data, start_vec, split);
+    [result_new, var_names_new, Time(:,2)] = AdaptiveLassoBilevelMIQP(data, start_vec, split);
     Lambda(:,2) = result_new.x(end,:);
     Beta(:,2) = result_new.x(2:(size(data,2)-1),:);
     
@@ -37,14 +37,12 @@ function [Lambda, Beta, Time, Beta0] = lassotest(n, p, s, beta_type, rho, mew, m
 
     ul(1,:) = 0.01;
     ul(2,:) = 10;
-    [ll(1,:), phi(1,:)] = solveLasso1(ul(1,:), data, split);
-    [ll(2,:), phi(2,:)] = solveLasso1(ul(2,:), data, split);
+    [ll(1,:), phi(1,:)] = AdaptiveLasso1(ul(1,:), data, split);
+    [ll(2,:), phi(2,:)] = AdaptiveLasso1(ul(2,:), data, split);
     
     for iter=2:max_iter
-%         disp(iter);
-        [ll(iter,:), phi(iter,:)] = solveLasso1(ul(iter,:), data, split);
-    %     [ul(iter+1,:), ll(iter+1,:), mew_mat(iter,1:iter), obj_val(iter+1,:)] = solveLassoBilevelMIQP_Dempe(ul, ll', mew_mat, phi, data, iter);
-        [ul(iter+1,:), ll(iter+1,:), mew_mat(iter,1:iter), obj_val(iter+1,:), time(iter-1,:)] = solveLassoBilevelDempe(ul, ll, mew_mat, phi, data, iter, split);
+        [ll(iter,:), phi(iter,:)] = AdaptiveLasso1(ul(iter,:), data, split);
+        [ul(iter+1,:), ll(iter+1,:), mew_mat(iter,1:iter), obj_val(iter+1,:), time(iter-1,:)] = AdaptiveLassoBilevelDempe(ul, ll, mew_mat, phi, data, iter, split);
     end
 
     Lambda(:,3) = ul(max_iter+1,:);

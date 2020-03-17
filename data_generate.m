@@ -45,7 +45,7 @@ function Beta0 = beta_generate(p, s, beta_type)
     if (beta_type == 0)
         Beta0 = 1*rand(p,1);
     elseif (beta_type == 1)
-%         dist = floor(p/s);
+        dist = floor(p/s);
 %         disp(dist);
         for i=1:p
             if mod(i,dist) == 0
