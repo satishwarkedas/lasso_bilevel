@@ -23,6 +23,7 @@ function [data, Beta0] = data_generate(n, p, s, beta_type, rho, mew)
     variance_const = (Beta0'*sigma*Beta0)/mew;
 %     variance_const = snr_level;
     
+    
     mu_Y = X*Beta0;
     Y = normrnd(mu_Y, variance_const);
     data(:,2:p+1) = X;
@@ -45,7 +46,7 @@ function Beta0 = beta_generate(p, s, beta_type)
     if (beta_type == 0)
         Beta0 = 1*rand(p,1);
     elseif (beta_type == 1)
-%         dist = floor(p/s);
+        dist = floor(p/s);
 %         disp(dist);
         for i=1:p
             if mod(i,dist) == 0
@@ -61,7 +62,7 @@ function Beta0 = beta_generate(p, s, beta_type)
             Beta0(i,1) = 10 - (9.5/(s-1))*(i-1);
         end
     elseif (beta_type == 5)
-        Beta0(1:s,1) = 1;
+        Beta0(1:s,1) = 10;
         for i=s+1:p
             Beta0(i,1) = 0.5^(i-s);
         end

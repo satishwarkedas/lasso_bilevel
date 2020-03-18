@@ -1,12 +1,12 @@
-function [res, nam, tEnd] = solveLassoBilevelMIQP(data, start_vec)
+function [res, nam, tEnd] = solveLassoBilevelMIQP(data, start_vec, split)
 
     problemName = 'lasso L1 regularization based on the KKT formulation ';             % Test problem name
 
     param = size(data,2)-1;              % no. of parameters including intercept
 
 
-    datapoints_train = [1:0.5*size(data,1)];
-    datapoints_test = [0.5*size(data,1)+1:size(data,1)];
+    datapoints_train = [1:split*size(data,1)];
+    datapoints_test = [split*size(data,1)+1:size(data,1)];
     data_trainX = data(datapoints_train,1:end-1);
     data_trainY = data(datapoints_train,end);
     data_testX = data(datapoints_test,1:end-1);
@@ -117,6 +117,7 @@ end
 function [A, b, sense_vec] = genlinconst(data_trainX, data_trainY, param)
     row_dim = 8*(param-1)+1;
     col_dim = param + 4*(param-1) + 1;
+    n_obs = 2*size(data_trainY,1);
     
     A = zeros(row_dim, col_dim);
     b = zeros(row_dim, 1);
@@ -129,8 +130,9 @@ function [A, b, sense_vec] = genlinconst(data_trainX, data_trainY, param)
     
     % First FOC constraints
     % for beta_0 -> 
-    % 2*(X_train(1)*X_train) x beta + 0 x eps + 1 x tau1(k) + (-1) x tau2k
-    % + 0 x u + 0 x lambda = 2*X_train(1)*Y_train
+    % (1/n_obs)*2*(X_train(1)*X_train) x beta + 0 x eps + 1 x tau1(k) + (-1) x tau2k
+    % + 0 x u + 0 x lambda = (1/n_obs)*2*X_train(1)*Y_train
+%     A_beta = (1/n_obs)*2*X_train(:,1)'*X_train;
     A_beta = 2*X_train(:,1)'*X_train;
     A_eps = zeros(param-1,1)';
     A_tau1 = zeros(param-1,1)';
@@ -139,13 +141,15 @@ function [A, b, sense_vec] = genlinconst(data_trainX, data_trainY, param)
     A_lambda = 0;
         
     A(1,:) = [A_beta, A_eps, A_tau1, A_tau2, A_u, A_lambda];
+%     b(1,:) = (1/n_obs)*2*X_train(:,1)'*Y_train;
     b(1,:) = 2*X_train(:,1)'*Y_train;
     sense_vec(1,:) = '=';
    
-    % 2*(X_train(k)'*X_train) x beta + 0 x eps + 1 x tau1(k) + (-1) x
+    % (1/n_obs)*2*(X_train(k)'*X_train) x beta + 0 x eps + 1 x tau1(k) + (-1) x
     % tau2(k)
-    % + 0 x u + 0 x lambda = 2 X_train(k)'*Y_train
+    % + 0 x u + 0 x lambda = (1/n_obs)*2*X_train(k)'*Y_train
     for k=2:param
+%         A_beta = (1/n_obs)*2*X_train(:,k)'*X_train;
         A_beta = 2*X_train(:,k)'*X_train;
         A_eps = zeros(param-1,1)';
         A_tau1 = I_pos(:,k-1)';
@@ -154,13 +158,12 @@ function [A, b, sense_vec] = genlinconst(data_trainX, data_trainY, param)
         A_lambda = 0;
         
         A(k,:) = [A_beta, A_eps, A_tau1, A_tau2, A_u, A_lambda];
+%         b(k,:) = (1/n_obs)*2*X_train(:,k)'*Y_train;
         b(k,:) = 2*X_train(:,k)'*Y_train;
         sense_vec(k,:) = '=';
     end
 
-    
-    
-    
+  
     % Second FOC constraints
     % 0 x beta + 0 x eps + (-1) x tau1(k) + (-1) x tau2k
     % + 0 x u + 1 x lambda = 0
@@ -183,7 +186,7 @@ function [A, b, sense_vec] = genlinconst(data_trainX, data_trainY, param)
     % 0 x lambda <= 0
     
     % define M = 20 here
-    M_1 = 20;
+    M_1 = 100;
     for k=1:param-1
         A_beta = zeros(param,1)';
         A_eps = zeros(param-1,1)';
@@ -220,13 +223,13 @@ function [A, b, sense_vec] = genlinconst(data_trainX, data_trainY, param)
     % 0 x lambda <= M_2(k)
     
     % define M = 1000 here
-    M_2 = 20;
+    M_2 = 100;
     for k=1:param-1
         A_beta = [0,I_neg(:,k)'];
         A_eps = I_pos(:,k)';
         A_tau1 = zeros(param-1,1)';
         A_tau2 = zeros(param-1,1)';
-        A_u = M_1 * I_pos(:,k)';
+        A_u = M_2 * I_pos(:,k)';
         A_lambda = 0;
         
         A(param+3*(param-1)+k,:) = [A_beta, A_eps, A_tau1, A_tau2, A_u, A_lambda];
@@ -243,7 +246,7 @@ function [A, b, sense_vec] = genlinconst(data_trainX, data_trainY, param)
         A_eps = I_pos(:,k)';
         A_tau1 = zeros(param-1,1)';
         A_tau2 = zeros(param-1,1)';
-        A_u = M_1 * I_neg(:,k)';
+        A_u = M_2 * I_neg(:,k)';
         A_lambda = 0;
         
         A(param+4*(param-1)+k,:) = [A_beta, A_eps, A_tau1, A_tau2, A_u, A_lambda];
