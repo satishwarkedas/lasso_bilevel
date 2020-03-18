@@ -7,14 +7,14 @@
 % Beta0 -> vector of the coefficients based on 
 % s -> sparsity level
 % beta_type -> type of sparsity
-function [data, Beta0] = data_generate_new(n, p, s, beta_type, rho, mew)
-    data = zeros(n,p+2);          % +1 for the intercept = 1
+function [data, Beta0] = data_generate(n, p, s, beta_type, rho, mew)
+    data = zeros(2*n,p+2);          % +1 for the intercept = 1
     data(:,1) = 1;                  % defining the intercept as 1
     Beta0 = beta_generate(p, s, beta_type);
     [x y] = meshgrid(1:p, 1:p);
     sigma = rho.^(abs(x-y));
     mu_X = zeros(1,p);
-    X = mvnrnd(mu_X, sigma.*(0.5), n);
+    X = mvnrnd(mu_X, sigma, 2*n);
     
 %     mew = (Beta0'*sigma*Beta0)/snr_level;
 %     disp(Beta0'*sigma*Beta0);
@@ -25,7 +25,7 @@ function [data, Beta0] = data_generate_new(n, p, s, beta_type, rho, mew)
     
     
     mu_Y = X*Beta0;
-    Y = normrnd(mu_Y, sqrt(0.2));
+    Y = normrnd(mu_Y, variance_const);
     data(:,2:p+1) = X;
     data(:,p+2) = Y;
 end
@@ -44,7 +44,7 @@ end
 function Beta0 = beta_generate(p, s, beta_type)
     Beta0 = zeros(p,1);
     if (beta_type == 0)
-        Beta0 = 10*rand(p,1);
+        Beta0 = 1*rand(p,1);
     elseif (beta_type == 1)
         dist = floor(p/s);
 %         disp(dist);
@@ -62,9 +62,9 @@ function Beta0 = beta_generate(p, s, beta_type)
             Beta0(i,1) = 10 - (9.5/(s-1))*(i-1);
         end
     elseif (beta_type == 5)
-        Beta0(1:s,1) = 1;
+        Beta0(1:s,1) = 10;
         for i=s+1:p
-            Beta0(i,1) = 1*0.5^(i-s);
+            Beta0(i,1) = 0.5^(i-s);
         end
     end
 end
