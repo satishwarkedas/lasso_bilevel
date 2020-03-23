@@ -15,8 +15,12 @@ Synthetic Datasets whose parameters are
 - mew - controls for the Signal-to-Noise Ratio
 
 ### cvAdaptiveLassoDempe.m
-[optimalLambda, totalTime] = cvAdaptiveLassoDempe(data, folds)
-- Uses the functions CVAdaptiveLasso1.m and CVAdaptiveLassoBilevelDempe.m; Refer to these functions below
+[optimalLambda, totalTime] = cvAdaptiveLassoDempe(data, folds, max_iter)  
+inputs
+- data -> data in the format mentioned above
+- folds -> no. of CV folds
+- max_iter -> maximum no. of iterations to be considered for lower-level approximations
+Uses the functions CVAdaptiveLasso1.m and CVAdaptiveLassoBilevelDempe.m; Refer to these functions below
 
 ### cvAdaptiveLassoMIQP.m
 [optimalLambda, totalTime] = cvAdaptiveLassoMIQP(data, folds, start_vec)
@@ -32,7 +36,11 @@ outputs:
 inputs:
 - ul      -> the list of upper-level vectors until the current iteration
 - ll      -> the list of lower-level vectors until the current iteration
-- phi     -> the list of 
+- phi     -> the list of phi-vectors corresponding to ul for each fold
+- data    -> data in the format mentioned above
+- iter    -> current iteration value
+- test_ind -> matrix of test indices for all folds - dimension - folds x #testindices
+- train_ind -> matrix of train indices for all folds - dimension - folds x #trainindices
 
 ### cvAdaptiveLasso1.m
 [beta, fval] = cvAdaptiveLasso1(lambda, data, index_train)  
