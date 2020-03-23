@@ -2,6 +2,9 @@
 
 MATLAB Codes 
 
+### Data input format
+data -> (X,y) where X(:,i) = [1, x0(i), x1(i), x2(i), ..., xp(i)]
+
 ### datagenerate.m
 Synthetic Datasets whose parameters are
 - n - number of examples/observations
@@ -10,6 +13,15 @@ Synthetic Datasets whose parameters are
 - beta_type - 4 different types of beta vectors
 - rho - correlation between the variables
 - mew - controls for the Signal-to-Noise Ratio
+
+### cvAdaptiveLassoDempe.m
+[optimalLambda, totalTime] = cvAdaptiveLassoDempe(data, folds)
+-- Uses the functions CVAdaptiveLasso1.m and CVAdaptiveLassoBilevelDempe.m; Refer to these functions below
+
+### cvAdaptiveLassoMIQP.m
+[optimalLambda, totalTime] = cvAdaptiveLassoMIQP(data, folds, start_vec)
+-- if no start_vec is provided, leave it blank; else needs to be the size - px1
+-- elements of start_vec can only take binary values -> corresponds to the signs of beta's (negative beta -> positive u)
 
 ### solveLasso1/AdaptiveLasso1.m
 Given a lambda value, implement Original LASSO or Adaptive LASSO
