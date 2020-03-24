@@ -2,8 +2,10 @@
 
 MATLAB Codes 
 
-### Data input format
-data -> (X,y) where X(:,i) = [1, x0(i), x1(i), x2(i), ..., xp(i)]
+### Major inputs and their format
+data -> (X,y) where X(:,i) = [1, x0(i), x1(i), x2(i), ..., xp(i)]  
+folds -> no. of CV folds  
+max_iter -> maximum no. of iterations to be considered for lower-level approximations  
 
 ### datagenerate.m
 Synthetic Datasets whose parameters are
@@ -16,16 +18,7 @@ Synthetic Datasets whose parameters are
 
 ### cvAdaptiveLassoDempe.m
 [optimalLambda, totalTime] = cvAdaptiveLassoDempe(data, folds, max_iter)  
-inputs
-- data -> data in the format mentioned above
-- folds -> no. of CV folds
-- max_iter -> maximum no. of iterations to be considered for lower-level approximations
 Uses the functions CVAdaptiveLasso1.m and CVAdaptiveLassoBilevelDempe.m; Refer to these functions below
-
-### cvAdaptiveLassoMIQP.m
-[optimalLambda, totalTime] = cvAdaptiveLassoMIQP(data, folds, start_vec)
-- if no start_vec is provided, leave it blank; else needs to be the size - px1
-- elements of start_vec can only take binary values -> corresponds to the signs of beta's (negative beta -> positive u)
 
 ### cvAdapativeLassoBilevelDempe.m
 [ul_vec, ll_mat, mew_mat, objval, tEnd] = CVAdaptiveLassoBilevelDempe(ul, ll, phi, data, iter, test_ind, train_ind)  
@@ -49,14 +42,21 @@ inputs:
 - data -> data matrix in the format mentioned above
 - index_train -> vector of row indices that are to be used for training, rest of the data will be considered for testing
 
+### cvLassoMIQP.m/cvAdaptiveLassoMIQP.m
+[optimalLambda, totalTime, res] = cvLassoMIQP/cvAdaptiveLassoMIQP(data, folds, start_vec)  
+outputs:
+- res -> the result of the MIQP solver of Gurobi (struct with multiple attributes)
+- if no start_vec is provided, leave it blank; else needs to be the size - p x 1
+- elements of start_vec can only take binary values -> corresponds to the signs of beta's (negative beta -> positive u)
+
+### solveLassoBilevelMIQP.m/AdaptiveLassoBilevelMIQP.m  
+Solve the Bi-level problem with lower level problem formulated using KKT conditions    
+[optimalLambda, optimalBeta, totalTime] = AdaptiveLassoBilevelMIQP(data, split, start_vec)  
+- split -> a value between 0 and 1; usage -> 0.7, 0.8: the first 70% and 80% of the data used for training, rest for testing
 
 ### solveLasso1/AdaptiveLasso1.m
 [beta, fval] = solveLasso1/AdaptiveLasso1(lambda, data, splits)
 - Given a lambda value, implement Original LASSO or Adaptive LASSO
-
-
-### solveLassoBilevelMIQP/AdaptiveLassoBilevelMIQP.m
-Solve the Bi-level problem with lower level problem formulated using KKT conditions
 
 ### solveLassoBilevelDempe/AdaptiveLassoBilevelDempe.m
 Solve the Bi-level problem with iterative lower-level mapping approximation scheme as proposed by Dempe et al.
