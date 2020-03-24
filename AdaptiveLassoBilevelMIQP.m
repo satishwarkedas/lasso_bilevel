@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-function [res, nam, tEnd] = AdaptiveLassoBilevelMIQP(data, start_vec, split)
+function [optimalLambda, optimalBeta, totalTime] = AdaptiveLassoBilevelMIQP(data, split, start_vec)
 
     problemName = 'lasso L1 regularization based on the KKT formulation ';             % Test problem name
 
@@ -87,11 +86,13 @@ function [res, nam, tEnd] = AdaptiveLassoBilevelMIQP(data, start_vec, split)
     % result
     tStart = tic;
     result = gurobi(model,params);
-    tEnd = toc(tStart);
+    totalTime = toc(tStart);
 %     disp(result);
 
     res = result;
     nam = names;
+    optimalLambda = sol(end,:)
+    optimalBeta = sol(1:param,:);
 %     sol = result.x;
 %     lambda_opt = sol(5*param+1,:);
 %     beta_opt = sol(1:param,:);

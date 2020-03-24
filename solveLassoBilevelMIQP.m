@@ -1,9 +1,8 @@
-function [res, nam, tEnd] = solveLassoBilevelMIQP(data, start_vec, split)
+function [optimalLambda, optimalBeta, totalTime] = solveLassoBilevelMIQP(data, split, start_vec)
 
     problemName = 'lasso L1 regularization based on the KKT formulation ';             % Test problem name
 
     param = size(data,2)-1;              % no. of parameters including intercept
-
 
     datapoints_train = [1:split*size(data,1)];
     datapoints_test = [split*size(data,1)+1:size(data,1)];
@@ -87,14 +86,14 @@ function [res, nam, tEnd] = solveLassoBilevelMIQP(data, start_vec, split)
     % result
     tStart = tic;
     result = gurobi(model,params);
-    tEnd = toc(tStart);
+    totalTime = toc(tStart);
 %     disp(result);
 
     res = result;
     nam = names;
-%     sol = result.x;
-%     lambda_opt = sol(5*param+1,:);
-%     beta_opt = sol(1:param,:);
+    sol = result.x;
+    optimalLambda = sol(end,:);
+    optimalBeta = sol(1:param,:);
 end
 
 function [Q, c, alpha] = genobjmat(data_testX, data_testY, param )

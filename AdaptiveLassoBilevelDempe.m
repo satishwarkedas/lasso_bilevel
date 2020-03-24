@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 function [ul_vec, ll_vec, mew_vec, objval, tEnd] = AdaptiveLassoBilevelDempe(ul, ll, mew_mat, phi, data, iter, split)
     Y_train = data(1:split*size(data,1),size(data,2));
     X_train = data(1:split*size(data,1),1:size(data,2)-1);

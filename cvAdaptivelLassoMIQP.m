@@ -1,6 +1,6 @@
-function [res, nam, tEnd, Q, b, A, c] = CVLassoBilevelMIQP2(data, start_vec, folds)
+function [optimalLambda, totalTime, res] = cvAdaptivelLassoMIQP(data, folds, start_vec)
 
-    problemName = 'Bilevel approach to CV for Original LASSO using MIQP';
+    problemName = 'Bilevel approach to CV for Adaptive LASSO using MIQP';
 
     param = size(data,2)-1;              % no. of parameters including intercept
     n_obs = size(data,1);                % no. of observations in the complete data
@@ -112,11 +112,12 @@ function [res, nam, tEnd, Q, b, A, c] = CVLassoBilevelMIQP2(data, start_vec, fol
     % result
     tStart = tic;
     result = gurobi(model,params);
-    tEnd = toc(tStart);
+    totalTime = toc(tStart);
 %     disp(result);
 
     res = result;
-    nam = names;
+    sol = result.x;
+    optimalLambda = sol(end,:); 
 %     sol = result.x;
 %     lambda_opt = sol(5*param+1,:);
 %     beta_opt = sol(1:param,:);
@@ -135,6 +136,7 @@ end
 function [A, b, sense_vec] = genlinconst(X_train, Y_train, param)
     row_dim = 8*(param-1)+1;
     col_dim = param + 4*(param-1) + 1;
+    eps_weights = abs(inv(X_train'*X_train)*X_train'*Y_train);
 %     disp(norm(eps_weights))
     n_obs = 2*size(Y_train,1);
     
@@ -180,14 +182,15 @@ function [A, b, sense_vec] = genlinconst(X_train, Y_train, param)
     % Second FOC constraints
     % for eps vector
     % 0 x beta + 0 x eps + (-1) x tau1(k) + (-1) x tau2(k)
-    % + 0 x u + 1 x lambda = 0
+    % + 0 x u + (1/eps_weight(k)) x 1 x lambda = 0
     for k=1:param-1
         A_beta = zeros(param,1)';
         A_eps = zeros(param-1,1)';
         A_tau1 = I_neg(:,k)';
         A_tau2 = I_neg(:,k)';
         A_u = zeros(param-1,1)';
-        A_lambda = 1;
+        A_lambda = 1/eps_weights(k+1,:);
+%         A_lambda = 1;
         
         A(param+k,:) = [A_beta, A_eps, A_tau1, A_tau2, A_u, A_lambda];
         b(param+k,:) = 0;
@@ -200,7 +203,7 @@ function [A, b, sense_vec] = genlinconst(X_train, Y_train, param)
     % 0 x lambda <= 0
     
     % M_1 made dependent on the OLS estimates
-    M_1 = 100;
+    M_1 = 2*(max(eps_weights));
     for k=1:param-1
         A_beta = zeros(param,1)';
         A_eps = zeros(param-1,1)';
@@ -237,7 +240,7 @@ function [A, b, sense_vec] = genlinconst(X_train, Y_train, param)
     % 0 x lambda <= M_2(k)
     
     % M_2 made dependent on the OLS estimates
-    M_2 = 100;
+    M_2 = 2*(max(eps_weights));
     for k=1:param-1
         A_beta = [0,I_neg(:,k)'];
         A_eps = I_pos(:,k)';
