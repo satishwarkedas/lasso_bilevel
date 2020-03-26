@@ -1,8 +1,9 @@
-function [beta, fval] = AdaptiveLasso1(lambda, data, split)
+function [beta, fval] = ElasticNet1(ul, data, split)
 
-problemName = 'lasso L1 regularization';             % Test problem name
+problemName = 'Elastic Net regularization';             % Test problem name
 
-ulDim=1;                         % Number of UL dimensions
+
+ulDim=2;                         % Number of UL dimensions
 llDim=size(data,2)-1;            % Number of LL dimensions
 
 %Upper level TP1 implemented
@@ -14,26 +15,25 @@ data_trainY = data(datapoints_train,end);
 options = optimset('Algorithm','active-set'); % run active-set algorithm
 options = optimset('Display','off','TolX',1e-10,'TolFun',1e-10);
 
+lambda = ul(:,1);
+alpha  = ul(:,2);
 llDimStart = zeros(1,2*llDim);
-[betaPlus, fval] = fmincon(@(beta) problemFunction(lambda,beta, data_trainX, data_trainY), llDimStart,[],[],[],[],[],[], @(beta) problemConstraints(lambda,beta), options);
+[betaPlus, fval] = fmincon(@(beta) problemFunction(lambda,alpha, beta, data_trainX, data_trainY), llDimStart,[],[],[],[],[],[], @(beta) problemConstraints(lambda,alpha,beta), options);
 beta = betaPlus(1:end/2);
 
 save('externalProblem');
 end
 
-function functionValue = problemFunction(lambda, betaPlus, data_trainX, data_trainY) 
+function functionValue = problemFunction(lambda, alpha, betaPlus, data_trainX, data_trainY) 
     nvars = length(betaPlus);
     beta = betaPlus(1:nvars/2);
     eps = betaPlus(nvars/2+1:end);
-    one = ones(size(eps))';
-    eps_weights = abs(inv(data_trainX'*data_trainX)*data_trainX'*data_trainY);
-
+    one = ones(size(eps(:,2:end)))';
     dataPoints = 2*length(data_trainY);
-%     functionValue = 1/dataPoints*sum((data_trainY-data_trainX*beta').^2)+lambda*(sum(eps));
-    functionValue = (1/dataPoints)*sum((data_trainY-data_trainX*beta').^2)+lambda*(eps(:,2:end)*(one(2:end,:)./eps_weights(2:end,:)));
+    functionValue = (1/dataPoints)*sum((data_trainY-data_trainX*beta').^2)+lambda*(1-alpha)/2*(beta(:,2:end)*beta(:,2:end)')+lambda*alpha*(eps(:,2:end)*one);
 end
         
-function [inequalityConstrVals equalityConstrVals] = problemConstraints(lambda, betaPlus)
+function [inequalityConstrVals equalityConstrVals] = problemConstraints(lambda, alpha, betaPlus)
     nvars = length(betaPlus);
     beta = betaPlus(1:nvars/2);
     eps = betaPlus(nvars/2+1:end);

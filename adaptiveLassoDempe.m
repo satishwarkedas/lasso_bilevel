@@ -1,5 +1,6 @@
 % Adaptive Lasso eps-approx method
 function [optimalLambda, optimalBeta, totalTime] = adaptiveLassoDempe(data, max_iter, split)
+    p = size(data,2)-2;
     % Need to maintain a running vector of phi, ul, ll, mew_vectors
     ul = zeros(max_iter+1,1);
     ll = zeros(max_iter+1,p+1);
@@ -20,7 +21,9 @@ function [optimalLambda, optimalBeta, totalTime] = adaptiveLassoDempe(data, max_
         [ll(iter,:), phi(iter,:)] = AdaptiveLasso1(ul(iter,:), data, split);
         tEnd2 = toc(tStart2);
         [ul(iter+1,:), ll(iter+1,:), mew_mat(iter,1:iter), obj_val(iter+1,:), time(iter-1,:)] = AdaptiveLassoBilevelDempe(ul, ll, mew_mat, phi, data, iter, split);
+%         disp(ul(iter+1,:));
         time(iter-1,:) = time(iter-1,:) + tEnd2;
+        disp(ul);
     end
 
     optimalLambda = ul(max_iter+1,:);
